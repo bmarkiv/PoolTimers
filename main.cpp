@@ -21,7 +21,6 @@ struct ScheduleConfig {
     uint16_t duration_min = 120;    // 2h
 };
 
-static unsigned long last_ws_heartbeat_ms = 0;
 
 // -------------------- Channel --------------------
 // Groups all per-relay state so filter and refill share one code path.
@@ -59,7 +58,6 @@ void sendChannelStateToClient(Channel &ch, AsyncWebSocketClient *client, unsigne
 int64_t now_utc_sec();
 int find_char(const char *str, char c);
 void set_channel_output(Channel &ch, bool on);
-void send_websocket_heartbeat(unsigned long now_ms);
 
 AsyncWebServer server(80);
 WifiManager::Options wifi_options;
@@ -188,11 +186,6 @@ void sendChannelState(Channel &ch, unsigned long now) {
     }
 }
 
-void send_websocket_heartbeat(unsigned long now_ms) {
-    if (now_ms - last_ws_heartbeat_ms < 2000) return;
-    last_ws_heartbeat_ms = now_ms;
-    for (auto *client : ws.getClients()) client->text("hb:1");
-}
 
 int find_char(const char *str, char c) {
     for (int i = 0; str[i]; i++) if (str[i] == c) return i;
@@ -440,7 +433,6 @@ void loop(void) {
     auto now = millis();
     ensure_ntp_sync();
     for (Channel &channel : channels) check_channel_schedule(channel, now);
-    send_websocket_heartbeat(now);
 
     bool button = digitalRead(PIN_BUTTON);
     if (button == LOW && last_button_state == HIGH && now - last_button_time > 200) {

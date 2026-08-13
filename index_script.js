@@ -43,10 +43,8 @@
 	let local_epoch_sec = Math.floor(Date.now() / 1000) - (new Date().getTimezoneOffset() * 60);
 	let manual_duration_sec = 5 * 3600;
 	let uptime_timer = null;
-	let websocket_watchdog_timer = null;
 	let reconnect_timer = null;
 	let reconnect_attempt = 0;
-	let last_ws_message_ms = Date.now();
 	let ui_ready = false;
 	let pending_manual_duration_sec = null;
 	let pending_run_duration_sec = null;
@@ -263,25 +261,6 @@
 		}
 	};
 
-	const start_websocket_watchdog = () => {
-		if (websocket_watchdog_timer !== null) return;
-		websocket_watchdog_timer = setInterval(() => {
-			if (websocket && websocket.readyState === WebSocket.OPEN && Date.now() - last_ws_message_ms > 6000) {
-				console.warn('WebSocket heartbeat timeout');
-				stop_uptime_timer();
-				setDisconnectedState();
-				try { websocket.close(); } catch (error) {}
-			}
-		}, 1000);
-	};
-
-	const stop_websocket_watchdog = () => {
-		if (websocket_watchdog_timer !== null) {
-			clearInterval(websocket_watchdog_timer);
-			websocket_watchdog_timer = null;
-		}
-	};
-
 	const scheduleReconnect = () => {
 		if (reconnect_timer !== null) return;
 		setConnectingState();
@@ -312,35 +291,33 @@
 		}
 		websocket = new WebSocket(`${wsProtocol}//${window.location.host}${WS_PATH}`);
 		window.websocket = websocket;
+		const socket = websocket;
 
-		websocket.onopen = function () {
+		socket.onopen = function () {
 			console.log('WebSocket connected');
-			last_ws_message_ms = Date.now();
 			clearReconnectTimer();
 			setConnectedState();
 			start_uptime_timer();
-			start_websocket_watchdog();
 			channel_ready = false;
-			websocket.send('channel:' + CHANNEL);
+			socket.send('channel:' + CHANNEL);
 			sendTimeSync();
 		};
 
-		websocket.onclose = function () {
+		socket.onclose = function () {
+			if (websocket !== socket) return;
 			channel_ready = false;
 			console.warn('WebSocket disconnected');
 			stop_uptime_timer();
-			stop_websocket_watchdog();
 			setDisconnectedState();
 			scheduleReconnect();
 		};
 
-		websocket.onerror = function () {
+		socket.onerror = function () {
 			console.warn('WebSocket error');
 		};
 
-		websocket.onmessage = function (event) {
+		socket.onmessage = function (event) {
 			try {
-				last_ws_message_ms = Date.now();
 				if (event.data === 'channel_ready:' + CHANNEL) {
 					channel_ready = true;
 					websocket.send(CHANNEL + ':get_state:1');
@@ -352,9 +329,6 @@
 						websocket.send(CHANNEL + ':set_manual_duration:' + pending_manual_duration_sec);
 						pending_manual_duration_sec = null;
 					}
-					return;
-				}
-				if (event.data.startsWith('hb:')) {
 					return;
 				}
 				if (event.data.startsWith('notice:')) {
