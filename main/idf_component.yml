@@ -1,0 +1,3 @@
+dependencies:
+  ESP32WifiManager:
+    git: https://github.com/bmarkiv/ESP32WifiManager.git

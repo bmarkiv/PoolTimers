@@ -41,6 +41,10 @@ body {
 		border: 1px solid #3a4551;
 	}
 
+	input[type="time"] {
+		color-scheme: dark;
+	}
+
 	.primary {
 		background: #0f766e;
 		border-color: #14b8a6;

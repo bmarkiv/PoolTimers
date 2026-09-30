@@ -20,11 +20,11 @@ This firmware is used to control a **pool filter pump** with:
 
 ## 🛠️ Features
 
-- Deterministic state machine for boot and recovery
-- Configurable AP fallback timeout
-- WiFi scan caching for stable UI rendering
-- Clean mobile-friendly config page
-- Debug and reset routes
+- Independent filter and refill timers with weekly schedules
+- Persistent timer settings and timezone configuration
+- Wi-Fi provisioning portal with network scanning
+- Browser-based firmware updates
+- Captive portal fallback when saved Wi-Fi credentials cannot connect
 
 ## 🚀 Build and Upload
 
@@ -34,22 +34,15 @@ This firmware is used to control a **pool filter pump** with:
 platformio run --environment ESP32
 ```
 
-2. Upload firmware (OTA):
+2. Flash the firmware over USB:
 
 ```bash
 platformio run --target upload --environment ESP32
 ```
 
-3. Verify the OTA target IP in [platformio.ini](platformio.ini) before upload:
+3. For subsequent updates, open `http://<device-ip>/update` and upload `.pio/build/ESP32/firmware.bin`.
 
-```ini
-upload_protocol = espota
-upload_port = <ESP32-IP>
-```
-
-If you have more than one device, always confirm `upload_port` points to the intended ESP32.
-
-AP SSID/password and captive portal IP are centralized in [../WifiManager/WifiManager.h](../WifiManager/WifiManager.h).
+For USB uploads, verify `upload_port` in [platformio.ini](platformio.ini), especially when more than one device is connected.
 
 ## 📶 First-Time WiFi Provisioning
 
@@ -57,24 +50,17 @@ When no STA credentials are saved, the device starts in AP mode.
 
 1. Connect to AP SSID: `SetupAP`
 2. AP password: `setup123`
-3. Open captive portal: `http://10.0.2.1`
-4. Select your WiFi SSID, enter password, then submit to save and reboot.
+3. Open `http://192.168.4.1/wifi` (or use the captive portal redirect).
+4. Select your Wi-Fi network, enter its password, then submit to save and reboot.
 
 ## 🧯 WiFi Recovery
 
-If device cannot connect to your router or credentials are outdated:
+If saved credentials no longer connect, the manager starts its setup access point after retrying:
 
-1. Open `http://<device-ip>/clear`
-2. Confirm reset of saved WiFi preferences
-3. Device reboots and returns to AP mode (`SetupAP`)
-4. Reconfigure WiFi at `http://10.0.2.1`
+1. Connect to `SetupAP` using password `setup123`.
+2. Open `http://192.168.4.1/wifi`.
+3. Select the current Wi-Fi network and save the credentials.
 
 ## 🔧 Serial Log Hint
 
-This log line is expected when no STA credentials are stored:
-
-`[WiFiManager] No credentials. Holding AP.`
-
-It means AP provisioning mode is active and waiting for setup via `http://10.0.2.1`.
-
-If you need a different AP IP later, update [WiFiConfig.h](WiFiConfig.h) only.
+Wi-Fi lifecycle messages use the `WifiManager` ESP-IDF log tag. With no saved station credentials, the setup access point is started for provisioning.
