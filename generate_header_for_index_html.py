@@ -14,18 +14,26 @@ def combine_html_chunks(html_path: Path) -> str:
         return chunk_path.read_text(encoding="utf-8")
 
     html = re.sub(r'<!--\s*#include\s+"([^"]+)"\s*-->', replace_chunk, html)
-    html = html.replace("__DATE__", datetime.now().strftime("%b %d %Y %H:%M:%S"))
     html = re.sub(r"\n[ \t]+", "\n", html)
     # html = re.sub(r"\n", "", html)
     return html
 
 
 def compress_html(html_path: Path, header_path: Path, array_name: str, len_name: str, etag_name: str) -> None:
-    html = combine_html_chunks(html_path)
+    html_template = combine_html_chunks(html_path)
+    source_hash = hashlib.sha256(html_template.encode("utf-8")).hexdigest()
+
+    if header_path.exists():
+        existing_header = header_path.read_text(encoding="utf-8")
+        existing_hash = re.search(r"// Source SHA256: ([0-9a-f]{64})", existing_header)
+        if existing_hash and existing_hash.group(1) == source_hash:
+            print(f"Header unchanged: {header_path.name}")
+            return
 
     date_time_macro = datetime.now().strftime("%b %d %Y %H:%M:%S")
+    html = html_template.replace("__DATE__", date_time_macro)
 
-    gz_data = gzip.compress(html.encode("utf-8"))
+    gz_data = gzip.compress(html.encode("utf-8"), mtime=0)
     byte_list = ",".join(f"0x{b:02x}" for b in gz_data)
 
     etag = '"' + hashlib.md5(gz_data).hexdigest()[:16] + '"'
@@ -35,7 +43,8 @@ def compress_html(html_path: Path, header_path: Path, array_name: str, len_name:
         f.write(f"{byte_list}\n}};\n")
         f.write(f"const uint32_t {len_name} = {len(gz_data)};\n")
         f.write(f'const char {etag_name}[] = {etag};\n')
-        f.write(f"// Generated: {date_time_macro}")
+        f.write(f"// Generated: {date_time_macro}\n")
+        f.write(f"// Source SHA256: {source_hash}")
 
     print(f"Header regenerated: {header_path.name}, date: {date_time_macro}")
 
