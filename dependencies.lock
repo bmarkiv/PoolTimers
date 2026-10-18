@@ -1,6 +1,6 @@
 dependencies:
   ESP32WifiManager:
-    component_hash: 2ea165cadb6512963a93de950766b4fe0b4d083e9192eedfc93c359f8529c509
+    component_hash: d5387a4aab36dee60b75e8b7ebcc304652d148513fc76649d4756a64dde29b47
     dependencies:
     - name: idf
       version: '>=5.0'
@@ -12,7 +12,7 @@ dependencies:
       git: https://github.com/bmarkiv/ESP32WifiManager.git
       path: .
       type: git
-    version: d62f4ab64abd386c3ed5b6cea9446f807012f033
+    version: ebdea3aebb4714904b08628572fa7f0e112a2520
   espressif/cjson:
     component_hash: e788323270d90738662d66fffa910bfe1fba019bba087f01557e70c40485b469
     dependencies:
@@ -28,7 +28,7 @@ dependencies:
       type: idf
     version: 6.1.0
   joltwallet/littlefs:
-    component_hash: 3af20a3d75c49db9dc2286fd50862c34055c9f578419ad1f2bf7ed3ed01391fe
+    component_hash: f65ef32c718e87638ee966b9b02f21639c45bed59c8d0126fd03e9c1f3275a92
     dependencies:
     - name: idf
       require: private
@@ -36,9 +36,9 @@ dependencies:
     source:
       registry_url: https://components.espressif.com/
       type: service
-    version: 1.22.3
+    version: 1.23.0
 direct_dependencies:
 - ESP32WifiManager
 manifest_hash: 35fe1a15c68e7aa00e12a53d5b0aa0105476bf979a3d2c9206933b9cbdc26925
-target: esp32
+target: esp32c6
 version: 3.0.0

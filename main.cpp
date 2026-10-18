@@ -26,10 +26,17 @@
 #include <vector>
 
 #define MAX_DURATION_ON    5 * 3600 * 1000  // 5 hours
+#ifdef CONFIG_IDF_TARGET_ESP32C6
+#define PIN_BUTTON         23
+#define PIN_RELAY          20
+#define PIN_REFILL_RELAY   21
+#define PIN_BLUE_LED       22
+#else
 #define PIN_BUTTON         14
 #define PIN_RELAY          27
 #define PIN_REFILL_RELAY   25
 #define PIN_BLUE_LED       26
+#endif
 
 static bool last_button_state = true;
 static unsigned long last_button_time = 0;
@@ -446,7 +453,6 @@ void register_app_routes() {
     restart_route.handler = restart_handler;
     ESP_ERROR_CHECK(wifiServer.registerRoute(restart_route));
 
-    ESP_ERROR_CHECK(wifiServer.registerDeferredRoutes());
 }
 
 // -------------------- Main Loop --------------------
@@ -467,8 +473,9 @@ extern "C" void app_main(void) {
                  status.connected ? "connected" : "disconnected",
                  status.ssid.c_str(), ip.c_str());
     });
-    wifiManager.begin();
+    ESP_ERROR_CHECK(wifiServer.start());
     register_app_routes();
+    wifiManager.begin();
 
     uint32_t last_wifi_poll = 0;
     bool wifi_connected = false;

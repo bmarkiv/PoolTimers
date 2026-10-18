@@ -27,6 +27,7 @@ def compress_html(html_path: Path, header_path: Path, array_name: str, len_name:
         existing_header = header_path.read_text(encoding="utf-8")
         existing_hash = re.search(r"// Source SHA256: ([0-9a-f]{64})", existing_header)
         if existing_hash and existing_hash.group(1) == source_hash:
+            header_path.touch()
             print(f"Header unchanged: {header_path.name}")
             return
 

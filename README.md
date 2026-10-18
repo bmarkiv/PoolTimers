@@ -28,21 +28,27 @@ This firmware is used to control a **pool filter pump** with:
 
 ## 🚀 Build and Upload
 
-1. Build firmware:
+The scripts use ESP-IDF 6.1 packages installed through PlatformIO by default, including its Python environment and compiler tools. They invoke `idf.py` directly. Override `IDF_PATH` or `IDF_PYTHON_ENV_PATH` when using a different ESP-IDF installation.
+
+Build for the project's default ESP32 target:
 
 ```bash
-platformio run --environment ESP32
+./scripts/build.sh
 ```
 
-2. Flash the firmware over USB:
+Build for the ESP32-C6 target instead:
 
 ```bash
-platformio run --target upload --environment ESP32
+./scripts/build.sh esp32c6
 ```
 
-3. For subsequent updates, open `http://<device-ip>/update` and upload `.pio/build/ESP32/firmware.bin`.
+Build, flash over USB, and open the serial monitor:
 
-For USB uploads, verify `upload_port` in [platformio.ini](platformio.ini), especially when more than one device is connected.
+```bash
+./scripts/build-upload-monitor.sh
+```
+
+The separate `./scripts/upload.sh` and `./scripts/monitor.sh` commands are also available. Set `IDF_PORT` when more than one serial device is connected, for example `IDF_PORT=/dev/cu.usbserial-0001 ./scripts/upload.sh`. The application binary for browser-based updates is generated under `build/esp32/PoolTimers.bin` (or the selected target directory).
 
 ## 📶 First-Time WiFi Provisioning
 

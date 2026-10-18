@@ -1,4 +1,5 @@
 .pio
+/build/
 /managed_components/
 /sdkconfig.ESP32
 .vscode/.browse.c_cpp.db*
